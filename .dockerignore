@@ -1,0 +1,7 @@
+.github
+docker
+node_modules
+Dockerfile
+.prettierrc.json
+render.yaml
+yarn.lock

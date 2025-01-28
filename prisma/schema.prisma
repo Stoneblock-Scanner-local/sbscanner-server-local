@@ -1,0 +1,167 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                         String                 @id @default(dbgenerated("(gen_random_uuid())::text"))
+  email                      String                 @unique
+  password                   String
+  imageSrc                   String?
+  displayName                String?                @unique
+  fullName                   String?
+  role                       Role                   @default(USER)
+  createdAt                  DateTime               @default(now())
+  acceptedTermsAndConditions Boolean                @default(false)
+  verificationToken          String?                @unique
+  isEmailVerified            Boolean                @default(false)
+  ResetPasswordRequest       ResetPasswordRequest[]
+  NominationVotes            NominationVote[]
+  CreatedNominations         Nomination[]           @relation("creator")
+  SavedNominations           Nomination[]           @relation("savers")
+  NominationComments         NominationComment[]
+  NominationRatings          NominationRating[]
+  ProjectAuditForms          ProjectAuditForm[]
+
+  @@index([email, displayName, role])
+}
+
+model Nomination {
+  id              String              @id @default(dbgenerated("(gen_random_uuid())::text"))
+  title           String
+  name            String
+  website         String
+  description     String
+  categories      ProjectCategory[]
+  socialX         String?
+  socialInstagram String?
+  socialDiscord   String?
+  otherInfo       String?
+  createdAt       DateTime            @default(now())
+  approvalStage   ApprovalStage       @default(PENDING)
+  creatorId       String
+  creator         User                @relation("creator", fields: [creatorId], references: [id])
+  Savers          User[]              @relation("savers")
+  Votes           NominationVote[]
+  Ratings         NominationRating[]
+  Comments        NominationComment[]
+  NominationView  NominationView[]
+
+  @@index([categories, approvalStage, title, name])
+}
+
+model NominationVote {
+  id           String     @id @default(dbgenerated("(gen_random_uuid())::text"))
+  vote         Vote
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  nominationId String
+  Nomination   Nomination @relation(fields: [nominationId], references: [id], onDelete: Cascade)
+  voterId      String
+  voter        User       @relation(fields: [voterId], references: [id])
+
+  @@index([nominationId, voterId])
+}
+
+model NominationRating {
+  id           String     @id @default(dbgenerated("(gen_random_uuid())::text"))
+  rate         Int        @default(0)
+  createdAt    DateTime   @default(now())
+  nominationId String
+  Nomination   Nomination @relation(fields: [nominationId], references: [id], onDelete: Cascade)
+  raterId      String
+  rater        User       @relation(fields: [raterId], references: [id])
+
+  @@index([nominationId, raterId])
+}
+
+model NominationComment {
+  id                    String              @id @default(dbgenerated("(gen_random_uuid())::text"))
+  text                  String
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+  numberOfChildren      Int                 @default(0)
+  deleted               Boolean             @default(false)
+  authorId              String
+  author                User                @relation(fields: [authorId], references: [id])
+  repliedToNominationId String?
+  RepliedToNomination   Nomination?         @relation(fields: [repliedToNominationId], references: [id], onDelete: Cascade)
+  repliedToCommentId    String?
+  RepliedToComment      NominationComment?  @relation("NominationComment", fields: [repliedToCommentId], references: [id])
+  Replies               NominationComment[] @relation("NominationComment")
+
+  @@index([repliedToNominationId, repliedToCommentId])
+}
+
+model NominationView {
+  id           String     @id @default(dbgenerated("(gen_random_uuid())::text"))
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  ipAddress    String
+  nominationId String
+  Nomination   Nomination @relation(fields: [nominationId], references: [id], onDelete: Cascade)
+
+  @@index([nominationId])
+}
+
+model ProjectAuditForm {
+  id                 String            @id @default(dbgenerated("(gen_random_uuid())::text"))
+  name               String
+  description        String
+  website            String
+  contactName        String
+  founderDescription String
+  presentationSrc    String
+  categories         ProjectCategory[]
+  socialEmail        String
+  socialX            String
+  socialInstagram    String
+  socialDiscord      String
+  socialTelegram     String?
+  otherInfo          String?
+  createdAt          DateTime          @default(now())
+  creatorId          String
+  creator            User              @relation(fields: [creatorId], references: [id])
+}
+
+model ResetPasswordRequest {
+  id          String   @id @default(dbgenerated("(gen_random_uuid())::text"))
+  createdAt   DateTime @default(now())
+  token       String
+  hasBeenUsed Boolean  @default(false)
+  userId      String
+  user        User?    @relation(fields: [userId], references: [id])
+}
+
+enum ProjectCategory {
+  DEFI
+  DEVELOPER_TOOLING
+  GAMING
+  INFRASTRUCTURE
+  NFT
+  SOCIAL
+  OTHER
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+enum ApprovalStage {
+  PENDING
+  VOTE_APPROVED
+  RATE_APPROVED
+}
+
+enum Vote {
+  UP
+  DOWN
+}

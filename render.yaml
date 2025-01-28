@@ -1,0 +1,29 @@
+services:
+  - type: web
+    name: sb-scanner-server
+    runtime: node
+    repo: https://github.com/StoneBlock-Blockchain/sb-scanner-server.git
+    plan: free
+    buildCommand: yarn && yarn build
+    startCommand: yarn start:prod
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: sb-scanner-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          name: sb-scanner-redis
+          type: redis
+          property: connectionString
+
+
+  - type: redis
+    name: sb-scanner-redis
+    ipAllowList: []
+    plan: free
+
+databases:
+  - name: sb-scanner-db
+    ipAllowList: []
+    plan: free

@@ -1,0 +1,15 @@
+version: '3.7'
+
+services:
+  server:
+    container_name: sbscanner-server
+    restart: "no"
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    ports:
+      - 8000:8800
+    environment:
+       - PORT=8800
+       - DATABASE_URL=postgresql://sbscanner:sbscanner@sbsdb:5432/sbscanner
+       - REDIS_URL=redis://redisdb:6379

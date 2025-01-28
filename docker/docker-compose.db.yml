@@ -1,0 +1,22 @@
+version: '3.7'
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: sbsdb
+    restart: always
+    environment:
+      - POSTGRES_USER=sbscanner
+      - POSTGRES_PASSWORD=sbscanner
+      - POSTGRES_DB=sbscanner
+    volumes:
+      - postgres:/var/lib/postgresql/data
+    ports:
+      - 5435:5432
+    expose:
+      - 5435
+      - 5432
+
+volumes:
+  postgres:
+    name: sbscanner-db

@@ -1,0 +1,16 @@
+version: '3.7'
+
+services:
+  redis:
+    image: redis:6.2.6
+    container_name: redisdb
+    restart: always
+    ports:
+      - '6379:6379'
+    volumes: 
+      - redis:/data 
+
+volumes:
+  redis:
+    name: redisdb
+    
